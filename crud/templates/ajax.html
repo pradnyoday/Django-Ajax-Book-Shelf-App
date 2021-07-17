@@ -1,0 +1,113 @@
+<script>
+    $("#btn-save").click(function(){
+        let str = ""
+        let id = $("#book_id").val();
+        console.log(id)
+        let name = $("#name").val();
+        let author = $("#author").val();
+        let csrf = $("[name='csrfmiddlewaretoken']").val();
+        if(name == ''){
+            $("#error_name").text("Please Enter Book's Name");
+            $("#error_name").show().fadeIn('fast').delay(3000).fadeOut('slow');
+        }
+        if(author == ''){
+            $("#error_author").text("Please Enter Author's Name");
+            $("#error_author").show().fadeIn('fast').delay(3000).fadeOut('slow');
+        }
+        else{
+                if(id != ''){
+                    data = {
+                        id:id,
+                        name: name,
+                        author: author,
+                        csrfmiddlewaretoken: csrf
+                    }
+                }
+                else{
+                    data = {
+                        name: name,
+                        author: author,
+                        csrfmiddlewaretoken: csrf
+                    }
+                }
+
+                $.ajax({
+                    url: "{% url 'save' %}",
+                    method: "POST",
+                    data: data,
+                    success: function(n_data){
+                        if(n_data.status == 1){
+                            let data = n_data.data
+                        
+                            for(i = 0; i< data.length; i++){
+                                str += "<tr><td>"+data[i].id+"</td><td>"+data[i].name+"</td><td>"+data[i].author+"</td><td>"+"<button data-book_id="+data[i].id+"  id='btn-edit' class='btn btn-info btn-edit' value='Edit'><i class='fa fa-edit'></i></button> <button data-book_id="+data[i].id+"  id='btn-del' class='btn btn-danger btn-del' value='Delete'><i class='fa fa-trash'></i></button>";
+                            }
+                            $("#alert_new").text("Data Saved!");
+                            $("#alert_new").show().fadeIn('fast').delay(3000).fadeOut('slow');
+                            $("#tbody").html(str);
+                            $("form")[0].reset();
+                        }
+                        else{
+                            $("#alert_error").text("Error Occured while saving Data!");
+                            $("#alert_error").show().fadeIn('fast').delay(3000).fadeOut('slow');
+                        }
+                    }
+                })
+            }
+        }
+        )
+
+
+        $("tbody").on("click",".btn-del",function(){
+            let csrf = $("[name='csrfmiddlewaretoken']").val();
+            let id = $(this).attr("data-book_id");
+            data = {'id':id,csrfmiddlewaretoken: csrf}
+            let mythis = this;
+
+            $.ajax({
+                url: "{% url 'delete' %}",
+                method: "POST",
+                data: data,
+                
+                success: function(data){
+                    console.log(data.status)
+                    if(data.status == 1){
+                        $(mythis).closest("tr").fadeOut();
+                        $("#error_table").text("Data Deleted!");
+                        $("#error_table").show().fadeIn('fast').delay(3000).fadeOut('slow');
+                    }
+                    else{
+                        $("#error_table").text("Could not Delete Data!");
+                        $("#error_table").show().fadeIn('fast').delay(3000).fadeOut('slow');
+                    }
+                }
+            })
+        });
+
+
+        $("tbody").on("click",".btn-edit",function(){
+            let csrf = $("[name='csrfmiddlewaretoken']").val();
+            let id = $(this).attr("data-book_id");
+            data = {'id':id,csrfmiddlewaretoken: csrf}
+            let mythis = this;
+
+            $.ajax({
+                url: "{% url 'edit' %}",
+                method: "POST",
+                data: data,
+                dataType: "json",
+                success: function(data){
+                    console.log(data)
+                    if(data.status == 1){
+                        $("#book_id").val(data.data.id);
+                        $("#name").val(data.data.name);
+                        $("#author").val(data.data.author);
+                    }
+                    else{
+                        $("#error_table").text("Could not Delete Data!");
+                        $("#error_table").show().fadeIn('fast').delay(3000).fadeOut('slow');
+                    }
+                }
+            })
+        });
+</script>
